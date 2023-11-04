@@ -3,6 +3,7 @@ class Mem:
     Data = [0] * MAX_MEM
 
     def initialize(self):
+        print("Initializing memory")
         self.Data = [0] * self.MAX_MEM
 
 class CPU:
@@ -100,4 +101,16 @@ class CPU:
 def main():
     mem = Mem()
     cpu = CPU()
+    print("Before Reset:")
+    print(f"PC: {cpu.PC}, SP: {cpu.SP}, A: {cpu.A}")
     cpu.reset(mem)
+    print("After Reset:")
+    print(f"PC: {cpu.PC}, SP: {cpu.SP}, A: {cpu.A}")
+    print("Memory First 10 bytes:", mem.Data[:10])
+    assert cpu.PC == 0xFFFC, "PC was not reset properly"
+    assert cpu.SP == 0x0100, "SP was not reset properly"
+    assert all([byte == 0 for byte in mem.Data]), "Memory was not initialized to zeros"
+
+
+if __name__ == "__main__":
+    main()
