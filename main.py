@@ -2,9 +2,13 @@ class Mem:
     MAX_MEM = 1024 * 64
     Data = [0] * MAX_MEM
 
-    def initialize(self):
-        print("Initializing memory")
+    def __getitem__(self, address):
+        assert 0 <= address < self.MAX_MEM, "Address is out of bounds"
+        return self.Data[address]
+
+    def __init__(self):
         self.Data = [0] * self.MAX_MEM
+
 
 class CPU:
     def __init__(self):
@@ -94,22 +98,36 @@ class CPU:
         self.set_flag_N(0)
         self.A = self.X = self.Y = 0
 
-        mem.initialize()
+        mem.__init__()
 
+    def fetch(self, mem):
+        data = mem.Data[self.PC]
+        self.PC += 1
+        print(f"Fetched data: {data:#04x} from PC: {self.PC}")
+        return data
+
+    def decode_execute(self, instruction, mem):
+        if instruction == 0xA9:
+            value = self.fetch(mem)
+            self.A = value
+            self.set_flag_Z(self.A == 0)
+            self.set_flag_N((self.A & 0b10000000) != 0)
+            print(f"Executed LDA with value: {self.A:#04x}")
+
+
+    def execute(self, cycles, mem):
+        while cycles > 0:
+            instruction = self.fetch(mem)
+            self.decode_execute(instruction, mem)
+            cycles -= 1
+            print(f"Cycles remaining: {cycles}")
 
 
 def main():
     mem = Mem()
     cpu = CPU()
-    print("Before Reset:")
-    print(f"PC: {cpu.PC}, SP: {cpu.SP}, A: {cpu.A}")
     cpu.reset(mem)
-    print("After Reset:")
-    print(f"PC: {cpu.PC}, SP: {cpu.SP}, A: {cpu.A}")
-    print("Memory First 10 bytes:", mem.Data[:10])
-    assert cpu.PC == 0xFFFC, "PC was not reset properly"
-    assert cpu.SP == 0x0100, "SP was not reset properly"
-    assert all([byte == 0 for byte in mem.Data]), "Memory was not initialized to zeros"
+    cpu.execute(2, mem)
 
 
 if __name__ == "__main__":
